@@ -1,5 +1,7 @@
 from django.db import models
 from user.models import User
+from datetime import date
+from django.core.exceptions import ValidationError
 
 class RecurrenceType(models.TextChoices):
     ONE_TIME = "one_time", "One-Time"
@@ -11,20 +13,29 @@ class RecurrenceType(models.TextChoices):
     RELATIVE = "relative", "Relative (e.g., every 2nd Monday of the month)"
 
 class DayOrInterval(models.TextChoices):
-    MONDAY = 'monday', 'Monday'
-    TUESDAY = 'tuesday', 'Tuesday'
-    WEDNESDAY = 'wednesday', 'Wednesday'
-    THURSDAY = 'thursday', 'Thursday'
-    FRIDAY = 'friday', 'Friday'
-    SATURDAY = 'saturday', 'Saturday'
-    SUNDAY = 'sunday', 'Sunday'
+    MONDAY = '1', 'Monday'
+    TUESDAY = '2', 'Tuesday'
+    WEDNESDAY = '3', 'Wednesday'
+    THURSDAY = '4', 'Thursday'
+    FRIDAY = '5', 'Friday'
+    SATURDAY = '6', 'Saturday'
+    SUNDAY = '7', 'Sunday'
     WEEKDAY = 'weekday', 'Weekday'
-    WEEKEND = 'weekend_day', 'Weekend day (Sat or Sun)'
+    WEEKEND = 'weekend', 'Weekend day (Sat or Sun)'
+
+class WeekdayChoices(models.IntegerChoices):
+    MONDAY = 1, 'Monday'
+    TUESDAY = 2, 'Tuesday'
+    WEDNESDAY = 3, 'Wednesday'
+    THURSDAY = 4, 'Thursday'
+    FRIDAY = 5, 'Friday'
+    SATURDAY = 6, 'Saturday'
+    SUNDAY = 7, 'Sunday'
 
 class NthChoices(models.TextChoices):
-    FIRST = 'first', 'First'
-    SECOND = 'second', 'Second'
-    THIRD = 'third', 'Third'
+    FIRST = '1', 'First'
+    SECOND = '2', 'Second'
+    THIRD = '3', 'Third'
     LAST = 'last', 'Last'
     NTH = 'nth', 'Nth'
     
@@ -49,7 +60,7 @@ class Event(models.Model):
         default=RecurrenceType.ONE_TIME
     )
 
-    # Optional fields for 'relative' recurrence type
+    # Options for 'relative' recurrence type
     relative_n = models.CharField(
         max_length=100, 
         choices=NthChoices,
@@ -69,7 +80,7 @@ class Event(models.Model):
         blank=True
     )    
 
-    # Optional fields for 'interval' recurrence type
+    # Options for 'interval' recurrence type
     interval_n = models.IntegerField(null=True, blank=True)  
     interval_timeframe = models.CharField(
         max_length=150, 
@@ -78,23 +89,57 @@ class Event(models.Model):
         blank=True
     )
 
-    def __str__(self):
-        return self.name
+    # Options for 'weekday' recurrence type
+    weekday_choice = models.IntegerField(
+        choices=WeekdayChoices.choices, 
+        null=True, 
+        blank=True
+    )
 
-class Dates_for_list_view(models.Model):
+    from django.core.exceptions import ValidationError
+
+    def clean(self):
+        super().clean()
+        if self.recurrence_type == RecurrenceType.INTERVAL:
+            if not (self.interval_n and self.interval_timeframe):
+                raise ValidationError("All interval fields must be set when recurrence type is 'interval'.")
+        else:
+            if self.interval_n or self.interval_timeframe:
+                raise ValidationError("Intervals fields must be empty unless recurrence type is 'interval'.")
+
+        if self.recurrence_type == RecurrenceType.WEEKDAY:
+            if not (self.weekday_choice):
+                raise ValidationError("Day be set when recurrence type is 'weekday'.")
+        else:
+            if self.weekday_choice:
+                raise ValidationError("Day shouldn't be set unless recurrence type is 'weekday'.")
+
+        if self.recurrence_type == RecurrenceType.RELATIVE:
+            if not (self.relative_n and self.relative_day_or_interval and self.relative_timeframe):
+                raise ValidationError("All relative fields must be set when recurrence type is 'relative'.")
+        else:
+            if self.relative_n or self.relative_weekday or self.relative_month:
+                raise ValidationError("Relative fields must be empty unless recurrence type is 'relative'.")
+        
+        if not date(2025, 1, 1) <= self.date <= date(2030, 12, 31):
+            raise ValidationError("Date must be between 2025 and 2030.")
+
+
+class EventList(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='creator')
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='event')
     date = models.DateField()
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['user', 'event', 'date'], name='unique_event')]
 
 class calendar_grid(models.Model):
     year = models.IntegerField()
     month = models.IntegerField()
-    date = models.IntegerField()
+    day = models.IntegerField()
+    full_date = models.DateField(null=True)
     day_of_week = models.IntegerField()
-    day_rank_month = models.IntegerField()
-    day_rank_year = models.IntegerField()
+    day_rank_month = models.IntegerField(null=True, blank=True)
+    day_rank_year = models.IntegerField(null=True, blank=True)
     is_booked = models.BooleanField(default=False)
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['year', 'month', 'date'], name='unique_date')
-        ]

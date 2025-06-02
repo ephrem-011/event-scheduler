@@ -11,7 +11,8 @@ def populate_dates(start_year=2025, end_year=2030):
         bulk_create_list.append(calendar_grid(
             year = current_date.year,
             month = current_date.month,
-            date = current_date.day,
+            day = current_date.day,
+            full_date = date(current_date.year, current_date.month,current_date.day),
             day_of_week = current_date.isoweekday()
         ))
         current_date += timedelta(days=1)
@@ -21,7 +22,7 @@ def populate_dates(start_year=2025, end_year=2030):
     for year in range(start_year, end_year + 1):
         for month in range(1, 13):
             for weekday in range(1, 8):
-                dates = calendar_grid.objects.filter(year=year, month=month, day_of_week=weekday).order_by('year', 'month', 'date')
+                dates = calendar_grid.objects.filter(year=year, month=month, day_of_week=weekday).order_by('year', 'month', 'day')
                 rank = 1
                 for d in dates:
                     d.day_rank_month = rank
@@ -30,7 +31,7 @@ def populate_dates(start_year=2025, end_year=2030):
 
     for year in range(start_year, end_year + 1):
         for weekday in range(1, 8):
-            dates = calendar_grid.objects.filter(year=year, day_of_week=weekday).order_by('year', 'month', 'date')
+            dates = calendar_grid.objects.filter(year=year, day_of_week=weekday).order_by('year', 'month', 'day')
             rank = 1
             for d in dates:
                 d.day_rank_year = rank
