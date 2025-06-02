@@ -3,8 +3,6 @@ from datetime import date, timedelta
 from django.views.generic import *
 from personal_events.models import *
 from django.contrib.auth.mixins import *
-from django.core.exceptions import PermissionDenied
-from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from personal_events.serializers import *
 from rest_framework import generics, viewsets
