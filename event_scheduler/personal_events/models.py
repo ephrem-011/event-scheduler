@@ -3,6 +3,11 @@ from user.models import User
 from datetime import date
 from django.core.exceptions import ValidationError
 
+
+class EventTypeChoices(models.TextChoices):
+    WORK_EVENT = 'work_event', "Work event"
+    PERSONAL_EVENT = 'personal_event', "Personal event"
+
 class RecurrenceType(models.TextChoices):
     ONE_TIME = "one_time", "One-Time"
     DAILY = "daily", "Daily"
@@ -54,6 +59,11 @@ class Event(models.Model):
     event_name = models.CharField(max_length=100)
     date = models.DateField()
     time = models.TimeField()
+    event_type = models.CharField(
+        max_length=150, 
+        choices=EventTypeChoices.choices, 
+        default=EventTypeChoices.PERSONAL_EVENT
+    )
     recursion_type = models.CharField(
         max_length=150, 
         choices=RecurrenceType.choices, 
@@ -100,30 +110,35 @@ class Event(models.Model):
 
     def clean(self):
         super().clean()
-        if self.recurrence_type == RecurrenceType.INTERVAL:
+        if self.recursion_type == RecurrenceType.INTERVAL:
             if not (self.interval_n and self.interval_timeframe):
                 raise ValidationError("All interval fields must be set when recurrence type is 'interval'.")
         else:
             if self.interval_n or self.interval_timeframe:
                 raise ValidationError("Intervals fields must be empty unless recurrence type is 'interval'.")
 
-        if self.recurrence_type == RecurrenceType.WEEKDAY:
+        if self.recursion_type == RecurrenceType.WEEKDAY:
             if not (self.weekday_choice):
                 raise ValidationError("Day be set when recurrence type is 'weekday'.")
         else:
             if self.weekday_choice:
                 raise ValidationError("Day shouldn't be set unless recurrence type is 'weekday'.")
 
-        if self.recurrence_type == RecurrenceType.RELATIVE:
+        if self.recursion_type == RecurrenceType.RELATIVE:
             if not (self.relative_n and self.relative_day_or_interval and self.relative_timeframe):
                 raise ValidationError("All relative fields must be set when recurrence type is 'relative'.")
         else:
             if self.relative_n or self.relative_weekday or self.relative_month:
                 raise ValidationError("Relative fields must be empty unless recurrence type is 'relative'.")
-        
+                
         if not date(2025, 1, 1) <= self.date <= date(2030, 12, 31):
             raise ValidationError("Date must be between 2025 and 2030.")
-
+        if not self.event_name:
+            raise ValidationError("Event name cannot be empty")
+        if not self.date:
+            raise ValidationError("Date cannot be empty") 
+        if not self.time:
+            raise ValidationError("Time name cannot be empty")
 
 class EventList(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='creator')

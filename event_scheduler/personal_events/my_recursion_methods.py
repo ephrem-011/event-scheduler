@@ -1,4 +1,4 @@
-from models import *
+from personal_events.models import *
 from datetime import date, timedelta
 from rest_framework import serializers
 def perform_daily_recursion(user, event):
@@ -74,13 +74,13 @@ def perform_weekday_recursion(user, event):
         EventList.objects.create(user = user, event = event, date = real_date)
 def perform_relative_recursion(user, event):
     today = date.today()
-    if event.relative_time_frame == 'month':
+    if event.relative_timeframe == 'month':
         rank_choice = event.relative_n
         day_choice = event.relative_day_or_interval
         if rank_choice == 'last':
             if day_choice == 'weekday':
                 for d in calendar_grid.objects.values('year', 'month').order_by('year', 'month').distinct():
-                    week_days = calendar_grid.objects.filter(full_date__gte=today, day_of_week__in = range(1,6), year = d['year'], month = d['month']).order_by('year', 'month', 'date')
+                    week_days = calendar_grid.objects.filter(full_date__gte=today, day_of_week__in = range(1,6), year = d['year'], month = d['month']).order_by('year', 'month', 'day')
                     last_day = week_days.last()
                     last_day.is_booked = True
                     last_day.save()
@@ -89,7 +89,7 @@ def perform_relative_recursion(user, event):
                 
             elif day_choice == 'weekend':
                 for d in calendar_grid.objects.values('year', 'month').order_by('year', 'month').distinct():
-                    week_ends = calendar_grid.objects.filter(full_date__gte=today, day_of_week__in = range(6,8), year = d['year'], month = d['month']).order_by('year', 'month', 'date')
+                    week_ends = calendar_grid.objects.filter(full_date__gte=today, day_of_week__in = range(6,8), year = d['year'], month = d['month']).order_by('year', 'month', 'day')
                     last_day = week_ends.last()
                     last_day.is_booked = True
                     last_day.save()
@@ -98,7 +98,7 @@ def perform_relative_recursion(user, event):
         else:
             if day_choice == 'weekday':
                 for d in calendar_grid.objects.values('year', 'month').order_by('year', 'month').distinct():
-                    week_days = calendar_grid.objects.filter(full_date__gte=today, day_of_week__in = range(1,6), year = d['year'], month = d['month']).order_by('year', 'month', 'date')
+                    week_days = calendar_grid.objects.filter(full_date__gte=today, day_of_week__in = range(1,6), year = d['year'], month = d['month']).order_by('year', 'month', 'day')
                     try:
                         booked_date = week_days[int(event.relative_n) - 1]
                         booked_date.is_booked = True
@@ -109,7 +109,7 @@ def perform_relative_recursion(user, event):
                         raise serializers.ValidationError(f"There is no {event.relative_n}th weekday in the month. Try again")
             elif day_choice == 'weekend':
                 for d in calendar_grid.objects.values('year', 'month').order_by('year', 'month').distinct():
-                    week_ends = calendar_grid.objects.filter(full_date__gte=today, day_of_week__in = range(6,8), year = d['year'], month = d['month']).order_by('year', 'month', 'date')
+                    week_ends = calendar_grid.objects.filter(full_date__gte=today, day_of_week__in = range(6,8), year = d['year'], month = d['month']).order_by('year', 'month', 'day')
                     try:
                         booked_date = week_ends[int(event.relative_n) - 1]
                         booked_date.is_booked = True
@@ -119,13 +119,12 @@ def perform_relative_recursion(user, event):
                     except IndexError:
                         raise serializers.ValidationError(f"There is no {event.relative_n}th weekend day in the month. try again")
             else:
-                booked_dates = calendar_grid.objects.filter(day_rank_month = int(event.relative_n), day_of_week = int(event.relative_day_or_interval)).order_by('year', 'month', 'date')
+                booked_dates = calendar_grid.objects.filter(day_rank_month = int(event.relative_n), day_of_week = int(event.relative_day_or_interval)).order_by('year', 'month', 'day')
                 if len(booked_dates) > 0:                    
                     for d in booked_dates:
                         d.is_booked = True
                         d.save()
-                        real_date = date(d.year, d.month, d.day)
-                        EventList.objects.create(user=user, event = event, date = real_date)
+                        EventList.objects.create(user=user, event = event, date = d.full_date)
                 else:
                     raise serializers.ValidationError(f"There is no {event.relative_n}th {DayOrInterval(event.relative_day_or_interval).label} in the month")
     if event.relative_timeframe == 'year':    
@@ -134,8 +133,8 @@ def perform_relative_recursion(user, event):
         if rank_choice == 'last':
             if day_choice == 'weekday':
                 for y in calendar_grid.objects.values('year').order_by('year').distinct():
-                    week_days = calendar_grid.objects.filter(full_date__gte=today, day_of_week__in = range(6,8), year = y['year']).order_by('year', 'month', 'date')
-                    last_day = week_ends.last()
+                    week_days = calendar_grid.objects.filter(full_date__gte=today, day_of_week__in = range(1,6), year = y['year']).order_by('year', 'month', 'day')
+                    last_day = week_days.last()
                     last_day.is_booked = True
                     last_day.save()
                     real_date = date(last_day.year, last_day.month, last_day.day)
@@ -143,7 +142,7 @@ def perform_relative_recursion(user, event):
 
             elif day_choice == 'weekend':
                 for y in calendar_grid.objects.values('year').order_by('year').distinct():
-                    week_ends = calendar_grid.objects.filter(full_date__gte=today, day_of_week__in = range(6,8), year = y['year']).order_by('year', 'month', 'date')
+                    week_ends = calendar_grid.objects.filter(full_date__gte=today, day_of_week__in = range(6,8), year = y['year']).order_by('year', 'month', 'day')
                     last_day = week_ends.last()
                     last_day.is_booked = True
                     last_day.save()
@@ -152,7 +151,7 @@ def perform_relative_recursion(user, event):
         else:
             if day_choice == 'weekday':
                 for y in calendar_grid.objects.values('year').order_by('year').distinct():
-                    week_days = calendar_grid.objects.filter(full_date__gte=today, day_of_week__in = range(1,6), year = y['year']).order_by('year', 'month', 'date')
+                    week_days = calendar_grid.objects.filter(full_date__gte=today, day_of_week__in = range(1,6), year = y['year']).order_by('year', 'month', 'day')
                     try:
                         booked_date = week_days[int(event.relative_n) - 1]
                         booked_date.is_booked = True
@@ -163,7 +162,7 @@ def perform_relative_recursion(user, event):
                         raise serializers.ValidationError (f"There is no {event.relative_n}th weekday in the year. Try again")
             elif day_choice == 'weekend':
                 for y in calendar_grid.objects.values('year').order_by('year').distinct():
-                    week_ends = calendar_grid.objects.filter(full_date__gte=today, day_of_week__in = range(6,8), year = y['year']).order_by('year', 'month', 'date')
+                    week_ends = calendar_grid.objects.filter(full_date__gte=today, day_of_week__in = range(6,8), year = y['year']).order_by('year', 'month', 'day')
                     try:
                         booked_date = week_ends[int(event.relative_n) - 1]
                         booked_date.is_booked = True
@@ -174,11 +173,11 @@ def perform_relative_recursion(user, event):
                         raise serializers.ValidationError(f"There is no {event.relative_n}th weekend day in the year. Try again")
             else:
                 try:
-                    booked_date = calendar_grid.objects.get(day_rank_year = int(event.relative_n), day_of_week = int(event.relative_day_or_interval))
-                    booked_date.is_booked = True
-                    booked_date.save()
-                    real_date = date(booked_date.year, booked_date.month, booked_date.day)
-                    EventList.objects.create(user=user, event = event, date = real_date)
+                    booked_date = calendar_grid.objects.filter(day_rank_year = int(event.relative_n), day_of_week = int(event.relative_day_or_interval))
+                    for d in booked_date:
+                        d.is_booked = True
+                        d.save()
+                        EventList.objects.create(user=user, event = event, date = d.full_date)
                 except calendar_grid.DoesNotExist:
                     raise ValidationError(f"There is no {event.relative_n}th {DayOrInterval(event.relative_day_or_interval).label} in the year")
 def perform_one_time(user, event):

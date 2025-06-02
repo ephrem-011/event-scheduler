@@ -9,6 +9,7 @@ from rest_framework import generics, viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authentication import TokenAuthentication
 from personal_events.handle_recursion import handle_recursion
+from django.db import transaction
 
 class CreateEvent(generics.CreateAPIView):
     authentication_classes = [TokenAuthentication]
@@ -16,10 +17,11 @@ class CreateEvent(generics.CreateAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
     def perform_create(self, serializer):
-        my_event = serializer.save(user=self.request.user)
-        handle_recursion(self.request.user, my_event)
+        with transaction.atomic():
+            my_event = serializer.save(user=self.request.user)
+            handle_recursion(self.request.user, my_event)
 
-class ListEvents(generics.RetrieveAPIView):
+class ListEvents(generics.ListAPIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = EventListSerializer    

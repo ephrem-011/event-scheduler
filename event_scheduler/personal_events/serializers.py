@@ -5,6 +5,7 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = '__all__'
+        read_only_fields = ['user']
     def validate(self, attrs):
         instance = Event(**attrs)
         instance.clean()
