@@ -1,9 +1,12 @@
 from datetime import date, timedelta
 from personal_events.models import calendar_grid
+from django.db.models.signals import post_migrate
+from django.dispatch import receiver
 
-def populate_dates(start_year=2025, end_year=2030):
-    start_date = date(start_year, 1, 1)
-    end_date = date(end_year, 12, 31)
+@receiver(post_migrate)
+def populate_dates (sender, **kwargs):
+    start_date = date(2025, 1, 1)
+    end_date = date(2030, 12, 31)
     current_date = start_date
     bulk_create_list = []
 
@@ -19,7 +22,7 @@ def populate_dates(start_year=2025, end_year=2030):
 
     calendar_grid.objects.bulk_create(bulk_create_list, ignore_conflicts=True)
 
-    for year in range(start_year, end_year + 1):
+    for year in range(2025, 2031):
         for month in range(1, 13):
             for weekday in range(1, 8):
                 dates = calendar_grid.objects.filter(year=year, month=month, day_of_week=weekday).order_by('year', 'month', 'day')
@@ -29,7 +32,7 @@ def populate_dates(start_year=2025, end_year=2030):
                     d.save()
                     rank +=1
 
-    for year in range(start_year, end_year + 1):
+    for year in range(2025, 2031):
         for weekday in range(1, 8):
             dates = calendar_grid.objects.filter(year=year, day_of_week=weekday).order_by('year', 'month', 'day')
             rank = 1

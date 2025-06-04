@@ -57,6 +57,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# settings.py
+
+
+
+
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
@@ -94,11 +100,12 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'event_scheduling',
         'USER': 'root',
-        'PASSWORD':'1574321',
-        'HOST':'localhost',
-        'PORT':'3306',
+        'PASSWORD': '1574321',
+        'HOST': 'localhost',  
+        'PORT': '3306',
     }
 }
+
 
 
 # Password validation
