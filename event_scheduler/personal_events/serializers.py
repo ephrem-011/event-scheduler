@@ -11,13 +11,12 @@ class EventSerializer(serializers.ModelSerializer):
         instance.clean()
         return attrs
 
-
 class EventListSerializer(serializers.ModelSerializer):
     EventName = serializers.CharField(source = 'event.event_name')
     Time = serializers.CharField(source = 'event.time')
     class Meta:
         model = EventList
-        fields = ['id', 'EventName', 'date', 'Time']
+        fields = ['id', 'user', 'EventName', 'date', 'Time']
 
 class CalendarGridSerializer(serializers.ModelSerializer):
     class Meta:

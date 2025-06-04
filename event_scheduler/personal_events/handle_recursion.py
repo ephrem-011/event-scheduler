@@ -1,6 +1,6 @@
 from personal_events.my_recursion_methods import *
 def handle_recursion(user, event):
-    if event.recursion_type == 'One-Time':
+    if event.recursion_type == 'one_time':
         perform_one_time(user, event)
     elif event.recursion_type == 'daily':
         perform_daily_recursion(user, event)

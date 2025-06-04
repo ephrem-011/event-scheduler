@@ -20,13 +20,18 @@ class CreateEvent(generics.CreateAPIView):
         with transaction.atomic():
             my_event = serializer.save(user=self.request.user)
             handle_recursion(self.request.user, my_event)
-
+class SpecificDateEvents(generics.ListAPIView):
+    authentication_classes=[TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = EventListSerializer
+    def get_queryset(self):
+        return EventList.objects.filter(user = self.request.user, date=self.kwargs['date'])
 class ListEvents(generics.ListAPIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
-    serializer_class = EventListSerializer    
+    serializer_class = EventSerializer    
     def get_queryset(self):
-        return EventList.objects.filter(user = self.request.user)
+        return Event.objects.filter(user = self.request.user)
              
 class UpdateOrDeleteEvent(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = [TokenAuthentication]
@@ -34,9 +39,10 @@ class UpdateOrDeleteEvent(generics.RetrieveUpdateDestroyAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
     def perform_update(self, serializer):
-        updated_event = serializer.save()
-        EventList.objects.filter (event = updated_event).delete()
-        handle_recursion(self.request.user, updated_event)
+        with transaction.atomic():
+            updated_event = serializer.save()
+            EventList.objects.filter(event = updated_event).delete()
+            handle_recursion(self.request.user, updated_event)
     def perform_destroy(self, instance):
         if Event.objects.filter(date=instance.date).count() == 1:
             x = calendar_grid.objects.get(year = instance.date.year, month = instance.date.month, day = instance.date.day)
@@ -47,9 +53,10 @@ class UpdateOrDeleteEvent(generics.RetrieveUpdateDestroyAPIView):
 class DestroySpecificOccurrence(generics.DestroyAPIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
-    queryset = EventList.objects.all()
     serializer_class = EventListSerializer
-
+    def get_queryset(self):
+        return EventList.objects.filter(user=self.request.user)
+    
     def perform_destroy(self, instance):
         if EventList.objects.filter(date=instance.date).count() == 1:
             x = calendar_grid.objects.get(year = instance.date.year, month = instance.date.month, day = instance.date.day)
@@ -57,9 +64,11 @@ class DestroySpecificOccurrence(generics.DestroyAPIView):
             x.save()
             return super().perform_destroy(instance)
         return super().perform_destroy(instance)
-class CalendarGrid(generics.ListAPIView):
+    
+class Calendar(generics.ListAPIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
-    queryset = calendar_grid.objects.all()
-    serializer_class = CalendarGridSerializer
+    serializer_class = EventListSerializer
+    def get_queryset(self):
+        return EventList.objects.filter(user = self.request.user)
 
