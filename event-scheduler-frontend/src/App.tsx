@@ -29,8 +29,7 @@ export default function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
   const [showAddEventForm, setShowAddEventForm] = useState(false);
   const [recurrenceType, setRecurrenceType] = useState("one time");
-  const [currentDate, setCurrentDate] = useState(dayjs("2025-01-01"));
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [currentDate, setCurrentDate] = useState(dayjs());  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [eventsOnSelectedDate, setEventsOnSelectedDate] = useState<EventItem[]>([]);
   const [myEvents, setMyEvents] = useState<EventItem_[]>([]);
   const [eventName, setEventName] = useState("");
