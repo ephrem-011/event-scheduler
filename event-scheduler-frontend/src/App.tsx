@@ -153,7 +153,7 @@ export default function App() {
       window.location.reload();
     } catch (err:any) {
       console.error(err.response?.data);
-      alert("Creation failed");
+      alert("You missed required fields");
     }
   };
 
@@ -189,7 +189,7 @@ export default function App() {
       window.location.reload()
     } catch (err:any) {
       console.error(err.response?.data);
-      alert("Update failed");
+      alert("You missed required fields");
     }
   };
 
