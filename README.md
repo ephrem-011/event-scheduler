@@ -9,9 +9,9 @@ Users can create, view, and manage both one-time and complex recurring events. T
 
 ---
 ### Setup
-Follow these simple steps & run the commands
-step - 1 : docker-compose up --build
-step -2 : docker-compose exec backend python manage.py migrate
+**Follow these simple steps & run the commands**
+- step - 1 : docker-compose up --build
+- step -2 : docker-compose exec backend python manage.py migrate
 
 ### 1. **Monorepo Structure**
 
