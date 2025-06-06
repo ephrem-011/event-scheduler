@@ -44,9 +44,6 @@ Intentional Shortcuts
 * Used DRF TokenAuth instead of OAuth or JWT for speed and simplicity
 * Reloaded entire page after create/edit/delete instead of patching local state
 
-Trade-offs
-
-* Used minimal libraries for the sake of demonstrating competence & problem solving skill
 
 ---
 
