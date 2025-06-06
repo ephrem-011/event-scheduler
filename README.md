@@ -3,12 +3,15 @@ This is a full-stack event scheduling application built with:
 * **Backend:** Django + Django REST Framework (DRF)
 * **Frontend:** React 18 + TypeScript + TailwindCSS (Vite-powered SPA)
 * **Database:** MySQL
-* **Containerization:** Docker + Docker Compose (will containerize soon)
+* **Containerization:** Docker
 
 Users can create, view, and manage both one-time and complex recurring events. The frontend includes a dynamic calendar grid that displays booked dates with visual markers.
 
 ---
-
+### Setup
+Follow these simple steps & run the commands
+step - 1 : docker-compose up --build
+step -2 : docker-compose exec backend python manage.py migrate
 
 ### 1. **Monorepo Structure**
 
