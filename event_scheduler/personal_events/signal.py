@@ -2,45 +2,58 @@ from datetime import date, timedelta
 from personal_events.models import calendar_grid
 from django.db.models.signals import post_migrate
 from django.dispatch import receiver
+from django.db import connection
+
 
 @receiver(post_migrate)
 def populate_dates (sender, **kwargs):
+    print("Starting date population...")
+
     start_date = date(2025, 1, 1)
     end_date = date(2030, 12, 31)
     current_date = start_date
     bulk_create_list = []
 
     while current_date <= end_date:
-        bulk_create_list.append(calendar_grid(
-            year = current_date.year,
-            month = current_date.month,
-            day = current_date.day,
-            full_date = date(current_date.year, current_date.month,current_date.day),
-            day_of_week = current_date.isoweekday()
-        ))
-        current_date += timedelta(days=1)
+            bulk_create_list.append(calendar_grid(
+                year=current_date.year,
+                month=current_date.month,
+                day=current_date.day,
+                full_date=current_date,
+                day_of_week=current_date.isoweekday()
+            ))
+            current_date += timedelta(days=1)
 
     calendar_grid.objects.bulk_create(bulk_create_list, ignore_conflicts=True)
+    print(f"Inserted {len(bulk_create_list)} dates.")
 
-    for year in range(2025, 2031):
-        for month in range(1, 13):
-            for weekday in range(1, 8):
-                dates = calendar_grid.objects.filter(year=year, month=month, day_of_week=weekday).order_by('year', 'month', 'day')
-                rank = 1
-                for d in dates:
-                    d.day_rank_month = rank
-                    d.save()
-                    rank +=1
+        # Step 2: Run raw SQL to update rankings fast
+    with connection.cursor() as cursor:
+        print("Updating day_rank_month using raw SQL...")
+        cursor.execute('''
+                UPDATE personal_events_calendar_grid AS c
+                JOIN (
+                    SELECT id,
+                           ROW_NUMBER() OVER (PARTITION BY year, month, day_of_week ORDER BY day) AS rank_month
+                    FROM personal_events_calendar_grid
+                    WHERE year BETWEEN 2025 AND 2030
+                ) AS ranked ON c.id = ranked.id
+                SET c.day_rank_month = ranked.rank_month;
+            ''')
 
-    for year in range(2025, 2031):
-        for weekday in range(1, 8):
-            dates = calendar_grid.objects.filter(year=year, day_of_week=weekday).order_by('year', 'month', 'day')
-            rank = 1
-            for d in dates:
-                d.day_rank_year = rank
-                d.save()
-                rank += 1
+        print("Updating day_rank_year using raw SQL...")
+        cursor.execute('''
+                UPDATE personal_events_calendar_grid AS c
+                JOIN (
+                    SELECT id,
+                           ROW_NUMBER() OVER (PARTITION BY year, day_of_week ORDER BY month, day) AS rank_year
+                    FROM personal_events_calendar_grid
+                    WHERE year BETWEEN 2025 AND 2030
+                ) AS ranked ON c.id = ranked.id
+                SET c.day_rank_year = ranked.rank_year;
+            ''')
 
+        print("Finished updating rankings.")
 
 if __name__ == "__main__":
     populate_dates()

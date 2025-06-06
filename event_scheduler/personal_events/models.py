@@ -143,3 +143,6 @@ class calendar_grid(models.Model):
     day_rank_year = models.IntegerField(null=True, blank=True)
     is_booked = models.BooleanField(default=False)
 
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['full_date'], name='unique_full_date')]
+

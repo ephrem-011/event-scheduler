@@ -27,7 +27,7 @@ export default function App() {
   const [WeekdayChoice, setWeekdayChoice]=useState("");
   const [bookedDates, setBookedDates] = useState("");
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
-  const [showAddEventForm, setShowAddEventForm] = useState(false);
+  const [, setShowAddEventForm] = useState(false);
   const [recurrenceType, setRecurrenceType] = useState("one time");
   const [currentDate, setCurrentDate] = useState(dayjs());  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [eventsOnSelectedDate, setEventsOnSelectedDate] = useState<EventItem[]>([]);
@@ -35,7 +35,7 @@ export default function App() {
   const [eventName, setEventName] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  const [showDialog, setShowDialog] = useState(false);
+  const [, setShowDialog] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
 
 
@@ -80,7 +80,7 @@ export default function App() {
 
   const handleRegister = async () => {
   try {
-    const res = await api.post("/register", {
+    await api.post("/register", {
       username,
       password,
     });
@@ -328,7 +328,6 @@ export default function App() {
                                   <Dialog>
                                     <DialogTrigger asChild>
                                       <button
-                                    //onClick={() => handleEdit(event)}
                                     className="text-blue-500 hover:text-blue-700 text-xs"
                                   >
                                     Edit

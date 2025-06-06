@@ -1,0 +1,41 @@
+
+services:
+  backend:
+    build: ./event_scheduler
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./event_scheduler:/app
+    depends_on:
+        db:
+          condition: service_healthy
+
+
+  frontend:
+    build: ./event-scheduler-frontend
+    ports:
+      - "8080:80"
+    volumes:
+      - ./event-scheduler-frontend:/app
+    depends_on:
+      - backend
+
+  db:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_DATABASE: event_scheduling
+      MYSQL_ROOT_PASSWORD: 1574321
+    
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p1574321"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_data:

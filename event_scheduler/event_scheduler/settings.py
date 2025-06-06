@@ -101,7 +101,7 @@ DATABASES = {
         'NAME': 'event_scheduling',
         'USER': 'root',
         'PASSWORD': '1574321',
-        'HOST': 'localhost',  
+        'HOST': 'db',  
         'PORT': '3306',
     }
 }
